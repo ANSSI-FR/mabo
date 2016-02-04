@@ -1,0 +1,13 @@
+opam-version: "1.2"
+name: "mabo"
+version: "1.0"
+maintainer: "Guillaume Valadon <guillaume.valadon@ssi.gouv.fr>"
+license: "MIT"
+homepage: "https://github.com/anssi-fr/mabo"
+dev-repo: "https://github.com/anssi-fr/mabo.git"
+bug-reports: "https://github.com/anssi-fr/mabo/issues"
+authors: [ "Guillaume Valadon <guillaume.valadon@ssi.gouv.fr>"
+           "Nicolas Vivet <nicolas.vivet@ssi.gouv.fr>" ]
+build: [ make "mabo" ]
+remove: [ "ocamlfind" "remove" "mabo" ]
+depends: [ "ocamlfind" "yojson" "biniou" "camlzip" "camlbz2" ]

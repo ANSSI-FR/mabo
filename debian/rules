@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+include /usr/share/ocaml/ocamlvars.mk
+
+PKGDIR = $(CURDIR)/debian
+
+%:
+	dh --with ocaml $@
+
+override_dh_auto_install:
+	install -d $(PKGDIR)/mabo/usr/bin
+	install _build/src/mabo.native $(PKGDIR)/mabo/usr/bin/mabo

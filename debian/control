@@ -1,0 +1,15 @@
+Source: mabo
+Section: misc
+Priority: extra
+Maintainer: Nicolas Vivet <nicolas.vivet@ssi.gouv.fr>
+Uploaders: Nicolas Vivet <nicolas.vivet@ssi.gouv.fr>
+Build-Depends: debhelper (>= 9), ocaml-nox, dh-ocaml, libyojson-ocaml-dev,
+ libeasy-format-ocaml-dev, libbiniou-ocaml-dev, libzip-ocaml-dev, libbz2-ocaml-dev
+Standards-Version: 3.9.5
+
+Package: mabo
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: MRT parsing tools
+ Parse MRT files containing BGP logs.
+
