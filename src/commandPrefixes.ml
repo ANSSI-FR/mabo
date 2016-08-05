@@ -20,7 +20,9 @@ let rec aspath_to_list lap =
     in
     match lap with
     | AS_SEQUENCE(e)::lst          
-    | AS_SET(e)::lst               -> (ap e)@(aspath_to_list lst)
+    | AS_SET(e)::lst 
+    | AS_CONFED_SEQUENCE(e)::lst          
+    | AS_CONFED_SET(e)::lst        -> (ap e)@(aspath_to_list lst)
     | Unknown_AS_PATH_TYPE(n)::lst -> aspath_to_list lst
     | [] -> []
 
@@ -128,6 +130,12 @@ Optional arguments:
     do
       let hdr = Mrt.mrt_hdr inc in
       match hdr with
+      | MRTHeader(ts, TABLE_DUMP(afi, vn, sn, prefix, td_ts, pi, pa, l)) -> 
+                         (match find_asn_attr l asn_list !all with
+                         | Some(asn, as_list) -> let asn_str = Printf.sprintf "%li " asn in
+                                                 print_prefixes ~spacing:asn_str [prefix]
+                         | None -> ())
+
       | MRTHeader(ts, BGP4MP(MESSAGE(_, _, _, IPv4(pi), IPv4(li), BGP_UPDATE(wr, l, prefixes))))
       | MRTHeader(ts, BGP4MP(MESSAGE(_, _, _, IPv6(pi), IPv6(li), BGP_UPDATE(wr, l, prefixes)))) ->
                          (match find_asn_attr l asn_list !all with

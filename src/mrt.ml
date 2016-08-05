@@ -87,7 +87,11 @@ module MrtParser = functor (R : InputRaw) -> struct
 
       | 2 -> let path_segment = get_path_segment asn_len pc in
 	 AS_SEQUENCE(path_segment)::(parse_attr_as_path asn_len pc)
+      | 3 -> let path_segment = get_path_segment asn_len pc in
+	 AS_CONFED_SET(path_segment)::(parse_attr_as_path asn_len pc)
 
+      | 4 -> let path_segment = get_path_segment asn_len pc in
+	 AS_CONFED_SEQUENCE(path_segment)::(parse_attr_as_path asn_len pc)
       | n -> Unknown_AS_PATH_TYPE(n)::[]
     with
     | Input.ReshapeError(_) -> []
@@ -211,6 +215,43 @@ module MrtParser = functor (R : InputRaw) -> struct
        internal pc
      with
      | Input.ReshapeError(_) -> []
+
+
+  (** Parse MRT TABLE_DUMP *)
+  let parse_table_dump pc subtyp =
+
+    (* Ease IP addresses manipulation *)
+    let get_ip,stoi,afi = match subtyp with
+      | 1 -> Input.get_ip4, (fun x -> IPv4(x)),INET
+      | 2 -> Input.get_ip6, (fun x -> IPv6(x)),INET6
+      | n -> begin
+             let message = Printf.sprintf "TABLE_DUMP unknown address type: %i" n in
+             raise (MRTParsingError message)
+             end in
+
+    (* Parse the header *)
+    let view_number = Input.get_short pc in
+    let sequence_number = Input.get_short pc in
+    let prefix = stoi (get_ip pc) in
+    let plen = Input.get_byte pc in
+    let status = Input.get_byte pc in
+    let timestamp = Input.get_int32 pc in
+    let peer_ip = stoi (get_ip pc) in
+    let peer_as = Int32.of_int (Input.get_short pc) in
+    let attr_len = Input.get_short pc in
+
+    (* Ensure that status is equal to 1 *)
+    let _ = match status with
+	    | 1 -> ()
+	    | _ -> raise (MRTParsingError "TABLE_DUMP status is not equal to one !") in
+    
+    (* Parse BGP attributes *)
+    Input.reshape_enter pc attr_len;
+    let attributes = parse_bgp_attributes ~asn_len:2 pc get_ip in
+    Input.reshape_exit pc;
+
+    TABLE_DUMP(afi, view_number, sequence_number, Prefix(prefix, plen), timestamp,
+               peer_ip, peer_as, attributes)
 
 
   (** Parse MRT 'RIB Entries' *)
@@ -471,6 +512,8 @@ module MrtParser = functor (R : InputRaw) -> struct
       try
 	Input.reshape_enter pc length;
 	let tmp = match typ, subtyp with
+	| 12,1 -> MRTHeader(timestamp, parse_table_dump pc subtyp)
+	| 12,2 -> MRTHeader(timestamp, parse_table_dump pc subtyp)
 	| 13,1 -> MRTHeader(timestamp, TABLE_DUMP_v2(parse_peer_index_table pc))
 	| 13,2 -> MRTHeader(timestamp, TABLE_DUMP_v2(parse_rib_ipv4_unicast pc Input.get_ip4))
 	| 13,4 -> MRTHeader(timestamp, TABLE_DUMP_v2(parse_rib_ipv6_unicast pc Input.get_ip6))
@@ -558,6 +601,9 @@ module MrtParser = functor (R : InputRaw) -> struct
   (** Print unsupported MRT & BGP types in parsed data *)
   let show_unknown hdr = 
     match hdr with
+  | MRTHeader(_, TABLE_DUMP(_, _, _, _, _, _, _, attr)) -> 
+      find_unknown_attr attr
+
     | MRTHeader(_, TABLE_DUMP_v2(PEER_INDEX_TABLE(_,_, l))) -> 
 	    let rec find_unknown l =
 	      match l with

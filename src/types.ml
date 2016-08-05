@@ -37,6 +37,8 @@ type peer_entry = PeerEntry of string * ip_address * asn
 
 type path_segment = AS_SET of asn list
                   | AS_SEQUENCE of asn list
+                  | AS_CONFED_SET of asn list
+                  | AS_CONFED_SEQUENCE of asn list
 		  | Unknown_AS_PATH_TYPE of int
 
 
@@ -110,7 +112,8 @@ type bgp4mp = STATE_CHANGE of asn * asn * int * afi_type * ip_address * ip_addre
 	    | STATE_CHANGE_AS4 of asn * asn * int * afi_type * ip_address * ip_address * fsm_state * fsm_state  (* 16 5 *)
 
 
-type mrt_types = TABLE_DUMP_v2 of table_dump_v2 (* 13 *)
+type mrt_types = TABLE_DUMP of afi_type * int * int * prefix * int32 * ip_address * int32 * bgp_attributes list (* 12 *) 
+               | TABLE_DUMP_v2 of table_dump_v2 (* 13 *)
 	       | BGP4MP of bgp4mp (* 16 *)
                | Unknown of int * int * string
 

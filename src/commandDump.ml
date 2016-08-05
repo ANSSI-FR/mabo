@@ -24,8 +24,13 @@ let rec get_aspath_str ?(space="") l =
       space ^ "{" ^ (Printers.join "," (p e)) ^ "}" ^ (get_aspath_str ~space:" " lst)
   | AS_SEQUENCE(e)::lst ->
       space ^ (Printers.join " " (p e)) ^ (get_aspath_str ~space:" " lst)
+  | AS_CONFED_SET(e)::lst -> 
+      space ^ "[" ^ (Printers.join " " (p e)) ^ "]" ^ (get_aspath_str ~space:" " lst)
+  | AS_CONFED_SEQUENCE(e)::lst ->
+      space ^ "(" ^ (Printers.join " " (p e)) ^ ")" ^ (get_aspath_str ~space:" " lst)
   | Unknown_AS_PATH_TYPE(n)::lst ->
-      space  ^ "Unknown PATH type:" ^ (string_of_int n) ^ (get_aspath_str ~space:" " lst)
+      let message = Printf.sprintf "Unknown PATH type: %d ( parsing will likely stop here)" n in 
+      space  ^ message ^ (get_aspath_str ~space:" " lst)
   | [] -> ""
 
 
@@ -103,7 +108,7 @@ let rec print_prefixes prefixes_str_list =
 
 
 (** Print TABLE_DUMP_v2 *)
-let print_table_dump peers ts prefix l str_type = 
+let print_table_dump_v2 peers ts prefix l str_type = 
   let rec print_re l =
     match l with
     | RIBEntry(p_i, ts, _, rel)::lst ->
@@ -145,11 +150,15 @@ let rec get_unreach_nlri ?(get_prefixes = get_prefixes) attr =
 (** Print the MRT header *)
 let print_mrt ?(peers = []) ?(pipe = false) hdr = 
   match hdr with
+
+  | MRTHeader(ts, TABLE_DUMP(afi, vn, sn, prefix, td_ts, pi, pa, attr)) -> 
+      Printf.eprintf "TABLE_DUMP is not supported in legacy mode\n"
+
   | MRTHeader(ts, TABLE_DUMP_v2(RIB_IPV4_UNICAST(_, prefix, l))) -> 
-      print_table_dump peers ts prefix l "T4"
+      print_table_dump_v2 peers ts prefix l "T4"
 
   | MRTHeader(ts, TABLE_DUMP_v2(RIB_IPV6_UNICAST(_, prefix, l))) ->
-      print_table_dump peers ts prefix l "T6"
+      print_table_dump_v2 peers ts prefix l "T6"
 
   | MRTHeader(ts, BGP4MP(MESSAGE(ASN16(pa), ASN16(_), _, pi, _, BGP_UPDATE(wr, attr, prefixes))))
   | MRTHeader(ts, BGP4MP(MESSAGE_AS4(ASN32(pa), ASN32(_), _, pi, _, BGP_UPDATE(wr, attr, prefixes)))) ->
@@ -213,7 +222,7 @@ let table_dump2json peers ts prefix re_list =
 
 
 (** Transform an UPDATE to JSON *)
-let update2json ts peer_as peer_ip withdraw attr prefixes =
+let update2json ?(msg_type="update") ts peer_as peer_ip withdraw attr prefixes =
 
   (* Get the AS_PATH *)
   let as_path = match get_as_path (Printers.merge_as_path attr) with
@@ -221,13 +230,13 @@ let update2json ts peer_as peer_ip withdraw attr prefixes =
                 | ap -> [("as_path", `String(ap))] in
 
   (* Prepare the common "header" *)
-  let tmp_json = [ ("type", `String("update"));
+  let tmp_json = [ ("type", `String(msg_type));
                    ("timestamp", `Float(Int32.to_float ts));
                    ("peer_as", `Float(Int32.to_float peer_as));
                    ("peer_ip", `String(peer_ip)) ] @ as_path in
 
 
-  (* Retreive withdraws & announces *)
+  (* Retrieve withdraws & announces *)
   let str2yojsonstring = List.map (fun prefix -> `String(prefix)) in
   let wr_ipv6 = str2yojsonstring (get_unreach_nlri ~get_prefixes:get_prefixes_raw attr) (* IPv6 only *)
   and up_ipv6 = str2yojsonstring (get_reach_nlri ~get_prefixes:get_prefixes_raw attr)   (* IPv6 only *)
@@ -237,8 +246,9 @@ let update2json ts peer_as peer_ip withdraw attr prefixes =
   (* Return the UPDATE *)
   let withdraw_json = `List(wr_ipv6@wr_ipv4) in
   let announce_json = `List(up_ipv6@up_ipv4) in
-  `Assoc(tmp_json@[("announce", announce_json);("withdraw", withdraw_json)])
-
+  match msg_type with
+  | "table_dump" -> `Assoc(tmp_json@[("announce", announce_json)])
+  | _           -> `Assoc(tmp_json@[("announce", announce_json);("withdraw", withdraw_json)]) 
 
 let get_state_string = function
   | Idle -> "idle"
@@ -263,6 +273,10 @@ let state_change2json ts peer_as peer_ip old_state new_state =
 
 let print_mrt_json ?(peers = []) ?(pipe = false) hdr =
   match hdr with
+  | MRTHeader(ts, TABLE_DUMP(_, _, _, prefix, td_ts, pi, pa, attr)) -> 
+      let _, peer_ip, peer_as = get_from46 pi pa in
+      let json = update2json ~msg_type:"table_dump" td_ts peer_as peer_ip [] attr [prefix] in
+      Printf.printf "%s\n" (Yojson.to_string json)
   | MRTHeader(ts, TABLE_DUMP_v2(RIB_IPV4_UNICAST(_, prefix, l))) -> 
       Printf.printf "%s\n" (Yojson.to_string (table_dump2json peers ts prefix l))
   | MRTHeader(ts, TABLE_DUMP_v2(RIB_IPV6_UNICAST(_, prefix, l))) -> 
@@ -305,7 +319,8 @@ let parsing_loop m filename do_json do_unknown =
                          match do_json with
                          | false -> print_mrt ~peers:!peers hdr
                          | true  -> print_mrt_json ~peers:!peers hdr
-                       end)
+                       end;
+                       flush stdout)
            )
 	end;
 	count_headers := (!count_headers) + 1;

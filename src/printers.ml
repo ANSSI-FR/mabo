@@ -55,8 +55,10 @@ let print_as_path ?(ap_str="ASPATH:") l =
       | [] -> []
     in
     match l with
-    | AS_SET(e)::lst          -> " {" ^ (join "," (p e)) ^ "}" ^ (pap lst)
-    | AS_SEQUENCE(e)::lst               -> " " ^ (join " " (p e)) ^ (pap lst)
+    | AS_SET(e)::lst               -> " {" ^ (join "," (p e)) ^ "}" ^ (pap lst)
+    | AS_SEQUENCE(e)::lst          -> " " ^ (join " " (p e)) ^ (pap lst)
+    | AS_CONFED_SET(e)::lst        -> " [" ^ (join " " (p e)) ^ "]" ^ (pap lst)
+    | AS_CONFED_SEQUENCE(e)::lst   -> " (" ^ (join " " (p e)) ^ ")" ^ (pap lst)
     | Unknown_AS_PATH_TYPE(n)::lst -> " " ^ "Unknown PATH type:" ^ (string_of_int n) ^ (pap lst)
     | [] -> ""
   in
@@ -145,6 +147,9 @@ let merge_as_path attr_lst =
 	| AS_SET(e)::lst               -> (p e)@(get_asn lst)
 	| Unknown_AS_PATH_TYPE(n)::lst -> [-1l]@(get_asn lst)
 	| [] -> []
+	| AS_CONFED_SEQUENCE(e)::lst
+	| AS_CONFED_SET(e)::lst -> let msg = "merge_as_path(): don't know what to do with AS_CONFED_* !\n" in
+                                   raise (MRTParsingError msg)
     in
     let get_path attr =
       match List.hd attr with
@@ -297,6 +302,7 @@ let rec get_peers l =
   | PeerEntry(b, i, ASN32(a))::lst -> (b, i, a)::(get_peers lst)
   | _::lst -> get_peers lst
   | [] -> []
+
 
 let print_mrt ?(peers = []) hdr = 
   match hdr with
