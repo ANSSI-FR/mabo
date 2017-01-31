@@ -119,6 +119,10 @@ Optional arguments:
                  | 0 -> []
                  | _ -> asn_from_file !asn_filename in
 
+  let _ = match Sys.file_exists !filename with
+                 | false -> (Printf.printf "%s" usage; exit 1)
+                 | true -> () in
+
   (* Check the file's extension and create the parsing module. *)
   let m = choose_module !filename in
   let module Mrt = MrtParser ((val m : InputRaw)) in

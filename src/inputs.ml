@@ -309,8 +309,10 @@ let choose_module filename =
      let ext_len = String.length ext in
      (safe_sub fname ((String.length fname)-ext_len) ext_len) = ext
   in
-    match has_extension filename "gz" with
-    | true -> (module InputGzip : InputRaw)
-    | false -> (match has_extension filename "bz2" with
-                | true  -> (module InputBz2 : InputRaw)
-                | false -> (module InputFile : InputRaw))
+    match (String.length filename) > 3 with
+    | false -> (module InputFile : InputRaw)
+    | true  -> match has_extension filename "gz" with
+               | true  -> (module InputGzip : InputRaw)
+               | false -> (match has_extension filename "bz2" with
+                           | true  -> (module InputBz2 : InputRaw)
+                           | false -> (module InputFile : InputRaw))
