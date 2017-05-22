@@ -20,7 +20,7 @@ MRT dumps.
   * Nicolas Vivet <nicolas.vivet@ssi.gouv.fr>
 
 
-## Building MaBo
+## Building MaBo
 
 MaBo can be easily built on different operating systems. Three different
 methods are described below.
@@ -61,7 +61,7 @@ $ docker build -t anssi/mabo .
 $ docker run --rm -v latest-bview.gz:/bview.gz anssi/mabo:1.0 prefixes /bview.gz
 ```
 
-## Usage
+## Usage
 
 MaBo has three sub-commands:
 
