@@ -136,14 +136,14 @@ Optional arguments:
       match hdr with
       | MRTHeader(ts, TABLE_DUMP(afi, vn, sn, prefix, td_ts, pi, pa, l)) -> 
                          (match find_asn_attr l asn_list !all with
-                         | Some(asn, as_list) -> let asn_str = Printf.sprintf "%li " asn in
+                         | Some(asn, as_list) -> let asn_str = Printf.sprintf "%lu " asn in
                                                  print_prefixes ~spacing:asn_str [prefix]
                          | None -> ())
 
       | MRTHeader(ts, BGP4MP(MESSAGE(_, _, _, IPv4(pi), IPv4(li), BGP_UPDATE(wr, l, prefixes))))
       | MRTHeader(ts, BGP4MP(MESSAGE(_, _, _, IPv6(pi), IPv6(li), BGP_UPDATE(wr, l, prefixes)))) ->
                          (match find_asn_attr l asn_list !all with
-                         | Some(asn, as_list) -> let asn_str = Printf.sprintf "%li " asn in
+                         | Some(asn, as_list) -> let asn_str = Printf.sprintf "%lu " asn in
                                                  print_prefixes ~spacing:asn_str prefixes;
                                                  print_prefixes ~spacing:asn_str wr
                          | None -> ())
@@ -151,7 +151,7 @@ Optional arguments:
       | MRTHeader(ts, TABLE_DUMP_v2(RIB_IPV4_UNICAST(seq, Prefix(IPv4(prefix), plen_bits), l)))
       | MRTHeader(ts, TABLE_DUMP_v2(RIB_IPV6_UNICAST(seq, Prefix(IPv6(prefix), plen_bits), l))) ->
                          (match find_asn_re l asn_list !all with
-                         | Some(asn, as_list) -> Printf.printf "%li %s/%i\n" asn prefix plen_bits
+                         | Some(asn, as_list) -> Printf.printf "%lu %s/%i\n" asn prefix plen_bits
                          | None -> ())
 
 

@@ -114,7 +114,7 @@ let print_table_dump_v2 peers ts prefix l str_type =
     | RIBEntry(p_i, ts, _, rel)::lst ->
         begin
           let from_type, peer_ip, peer_as = get_from46_peers peers p_i in
-          let tmp_str = Printf.sprintf "%s %s %li %lu" from_type peer_ip peer_as ts in
+          let tmp_str = Printf.sprintf "%s %s %lu %lu" from_type peer_ip peer_as ts in
           let tmp_ap = get_as_path (Printers.merge_as_path rel) in
           begin
             match tmp_ap with

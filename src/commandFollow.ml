@@ -98,8 +98,8 @@ let _peer2str l i =
   | n when n > i -> (let _,ipa,asn = List.nth l i in
 		     match ipa with
 		     | IPv6(a)
-		     | IPv4(a)      -> Printf.sprintf "%s %li" a asn
-		     | UnknownIP(a) -> Printf.sprintf "UNKNOWN_IP %i %li" a asn)
+		     | IPv4(a)      -> Printf.sprintf "%s %lu" a asn
+		     | UnknownIP(a) -> Printf.sprintf "UNKNOWN_IP %i %lu" a asn)
   | _ -> Printf.sprintf "UNKNOWN_PEER UNKNOWN_ASN"
 
 let rec list_of_peers peers rel = 

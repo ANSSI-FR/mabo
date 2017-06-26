@@ -109,8 +109,8 @@ let rec print_from ?(from_str="FROM: ") peers p_i =
   | n when n > p_i -> (let _,ipa,asn = List.nth peers p_i in
                       match ipa with
 		      | IPv6(a)
-		      | IPv4(a) -> Printf.printf "%s%s AS%li\n" from_str a asn
-		      | UnknownIP(a) -> Printf.printf "%sUNKNOWN_IP %i AS%li\n" from_str a asn)
+		      | IPv4(a) -> Printf.printf "%s%s AS%lu\n" from_str a asn
+		      | UnknownIP(a) -> Printf.printf "%sUNKNOWN_IP %i AS%lu\n" from_str a asn)
   | n -> Printf.printf "%sPEER_NOT_FOUND (%d/%d)\n" from_str p_i n
 
 
@@ -206,7 +206,7 @@ let rec print_attr l =
   | BGPAttributeAGGREGATOR(_, ASN16(asn), ip)::lst
   | BGPAttributeAGGREGATOR(_, ASN32(asn), ip)::lst -> (match asn with
                                                       | 23456l -> ()
-						      |_ -> Printf.printf "AGGREGATOR: AS%li %s\n" asn ip);
+						      |_ -> Printf.printf "AGGREGATOR: AS%lu %s\n" asn ip);
 					              print_attr lst
 
   | BGPAttributeMULTI_EXIT_DISC(_, med)::lst -> Printf.printf "MULTI_EXIT_DISC: %lu\n" med;
@@ -312,7 +312,7 @@ let print_mrt ?(peers = []) hdr =
 	    | PeerEntry(b, IPv4(i), ASN16(a))::lst
 	    | PeerEntry(b, IPv6(i), ASN16(a))::lst
 	    | PeerEntry(b, IPv4(i), ASN32(a))::lst
-	    | PeerEntry(b, IPv6(i), ASN32(a))::lst -> Printf.printf "PEER: %s %s %li\n" b i a;
+	    | PeerEntry(b, IPv6(i), ASN32(a))::lst -> Printf.printf "PEER: %s %s %lu\n" b i a;
 	                                              print lst
 	    | _::lst -> print lst
 	    | [] -> ()
@@ -349,7 +349,7 @@ let print_mrt ?(peers = []) hdr =
 	             Printf.printf "TIME: %s\n" (timestamp_to_string  ts);
 		     Printf.printf "TYPE: BGP4MP/MESSAGE/Open\n";
 		     Printf.printf "VERSION: %d\n" v;
-		     Printf.printf "AS: %li\n" myasn;
+		     Printf.printf "AS: %lu\n" myasn;
 		     Printf.printf "HOLD_TIME: %d\n" htime;
 		     Printf.printf "ID: %s\n" id;
 		     Printf.printf "OPT_PARM_LEN: %d\n" (List.length params);
@@ -362,8 +362,8 @@ let print_mrt ?(peers = []) hdr =
   | MRTHeader(ts, BGP4MP(MESSAGE_AS4(ASN32(pa), ASN32(la), ii, IPv6(pi), IPv6(li), BGP_UPDATE(wr, attr, prefixes)))) ->
 	             Printf.printf "TIME: %s\n" (timestamp_to_string  ts);
           	     Printf.printf "TYPE: BGP4MP/MESSAGE/Update\n";
-		     Printf.printf "FROM: %s AS%li\n" pi pa;
-		     Printf.printf "TO: %s AS%li\n" li la;
+		     Printf.printf "FROM: %s AS%lu\n" pi pa;
+		     Printf.printf "TO: %s AS%lu\n" li la;
 		     print_attr (merge_as_path (sort_bgp_attributes attr));
 		     print_reach_nlri attr; (* IPv6 only *)
 		     (match List.length wr with
@@ -382,8 +382,8 @@ let print_mrt ?(peers = []) hdr =
   | MRTHeader(ts, BGP4MP(MESSAGE_AS4(ASN32(pa), ASN32(la), ii, IPv6(pi), IPv6(li), BGP_KEEPALIVE))) ->
 	             Printf.printf "TIME: %s\n" (timestamp_to_string  ts);
           	     Printf.printf "TYPE: BGP4MP/MESSAGE/Keepalive\n";
-		     Printf.printf "FROM: %s AS%li\n" pi pa;
-		     Printf.printf "TO: %s AS%li\n" li la;
+		     Printf.printf "FROM: %s AS%lu\n" pi pa;
+		     Printf.printf "TO: %s AS%lu\n" li la;
 		     print_newline ()
 
   | MRTHeader(ts, BGP4MP(MESSAGE(ASN16(pa), ASN16(la), ii, IPv4(pi), IPv4(li), BGP_NOTIFICATION(c, sc, d))))
@@ -392,8 +392,8 @@ let print_mrt ?(peers = []) hdr =
   | MRTHeader(ts, BGP4MP(MESSAGE_AS4(ASN32(pa), ASN32(la), ii, IPv6(pi), IPv6(li), BGP_NOTIFICATION(c, sc, d)))) ->
 	             Printf.printf "TIME: %s\n" (timestamp_to_string  ts);
           	     Printf.printf "TYPE: BGP4MP/MESSAGE/Notification %i %i %s\n" c sc d;
-		     Printf.printf "FROM: %s AS%li\n" pi pa;
-		     Printf.printf "TO: %s AS%li\n" li la;
+		     Printf.printf "FROM: %s AS%lu\n" pi pa;
+		     Printf.printf "TO: %s AS%lu\n" li la;
 		     print_newline ()
 
   | MRTHeader(ts, BGP4MP(STATE_CHANGE(ASN16(pa), ASN16(la), ii, afi, IPv4(pi), IPv4(li), old_state, new_state)))
@@ -402,7 +402,7 @@ let print_mrt ?(peers = []) hdr =
   | MRTHeader(ts, BGP4MP(STATE_CHANGE_AS4(ASN32(pa), ASN32(la), ii, afi, IPv6(pi), IPv6(li), old_state, new_state))) ->
 	             Printf.printf "TIME: %s\n" (timestamp_to_string  ts);
           	     Printf.printf "TYPE: BGP4MP/STATE_CHANGE\n";
-		     Printf.printf "PEER: %s AS%li\n" pi pa;
+		     Printf.printf "PEER: %s AS%lu\n" pi pa;
 		     Printf.printf "STATE: %s/%s\n" (fsm_state_to_str old_state) (fsm_state_to_str new_state);
 		     print_newline ()
   
