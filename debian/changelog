@@ -1,3 +1,9 @@
+mabo (1.1-1) UNRELEASED; urgency=low
+
+  * Fix wrong 32 bits ASN printing
+
+ -- Nicolas Vivet <nicolas.vivet@ssi.gouv.fr>  Mon,  26 Jun 2017 15:58:31 +0200
+
 mabo (1.0-1) UNRELEASED; urgency=low
 
   * Initial release
