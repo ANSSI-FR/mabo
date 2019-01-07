@@ -409,7 +409,7 @@ let parsing_pipe json =
       | [], _, _ -> ()
       | read, _, _ -> begin
                       (* 1. get the header *)
-                      let header = String.create 9 in
+                      let header = Bytes.create 9 in
 		      let bytes = Unix.read fd header 0 9 in
 		      (if bytes <> 9
 		      then
@@ -417,7 +417,7 @@ let parsing_pipe json =
 			raise End_of_file));
                       
                       (* 2. check the header *)
-		      let cmd,len,index = _check_header header !previous_index in
+		      let cmd,len,index = _check_header (Bytes.to_string header) !previous_index in
 		      previous_index := index;
 
 		      if cmd = 1 (* the exit code *)
@@ -427,13 +427,13 @@ let parsing_pipe json =
 
 		      (* 3. parse the MRT dump *)
 		      let rec _read_exact fd len_needed =
-		        let tmp = String.create len_needed in
+		        let tmp = Bytes.create len_needed in
 			let bytes = Unix.read fd tmp 0 len_needed in
 			match bytes = len_needed with
 			| true  -> bytes,tmp
 			| false -> let tmp_len = len_needed-bytes in
 			           let b,t = _read_exact fd tmp_len in
-				   bytes+b, tmp^t
+			           bytes+b, tmp
 			           
 		      in
 		      let bytes,tmp = _read_exact fd len in
@@ -442,7 +442,7 @@ let parsing_pipe json =
 		      then
 		        (Printf.printf "ERROR-FATAL: MRT dump - not enough data %d/%d\n" bytes len;
 			raise End_of_file));
-                      _str_parser tmp index peers count_headers;
+                      _str_parser (Bytes.to_string tmp) index peers count_headers;
 
 		      end;
     done

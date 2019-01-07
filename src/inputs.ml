@@ -13,6 +13,7 @@
  *)
 
 
+open Bytes
 open Types
 open Printers
 open MrtTools
@@ -50,10 +51,10 @@ module InputFile = struct
     fd
 
   let retrieve fd len =
-    let tmp = String.create len in
+    let tmp = Bytes.create len in
     match Pervasives.input fd tmp 0 len with
     | 0 -> "",0
-    | n -> (safe_sub tmp 0 n), n (* return the correct number of bytes *)
+    | n -> (safe_sub (Bytes.to_string tmp) 0 n), n (* return the correct number of bytes *)
 
 end;;
 
@@ -68,10 +69,10 @@ module InputGzip = struct
     fd
 
   let retrieve fd len =
-    let tmp = String.create len in
+    let tmp = Bytes.create len in
     match Gzip.input fd tmp 0 len with
     | 0 -> "",0
-    | n -> (safe_sub tmp 0 n),n (* return the correct number of bytes *)
+    | n -> (safe_sub (Bytes.to_string tmp) 0 n),n (* return the correct number of bytes *)
 
 end;;
 
@@ -88,10 +89,10 @@ module InputBz2 = struct
     fd
 
   let retrieve fd len =
-    let tmp = String.create len in
-    match Bz2.read fd tmp 0 len with
+    let tmp = Bytes.create len in
+    match Bz2.read fd (Bytes.to_string tmp) 0 len with
     | 0 -> "",0
-    | n -> (safe_sub tmp 0 n),n (* return the correct number of bytes *)
+    | n -> (safe_sub (Bytes.to_string tmp) 0 n),n (* return the correct number of bytes *)
 
 end;;
 
