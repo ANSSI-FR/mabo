@@ -20,6 +20,7 @@
 /* Convert a 'struct in_addr' to an Ocaml string */
 value inaddr2string(struct in_addr addr_in)
 {
+  CAMLparam0();
   CAMLlocal1(address_binary);
 
   /* Prepare the ocaml string */
