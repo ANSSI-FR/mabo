@@ -14,5 +14,11 @@ RUN set -x && \
     apt-get autoclean && apt-get --purge -y autoremove && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Copy the binary and libraries to the distroless image
+FROM gcr.io/distroless/base
+COPY --from=0 /lib/x86_64-linux-gnu/libz.so.1 /lib/x86_64-linux-gnu/libz.so.1
+COPY --from=0 /lib/x86_64-linux-gnu/libbz2.so.1.0 /lib/x86_64-linux-gnu/libbz2.so.1.0
+COPY --from=0 /mabo/mabo .
+
 # Arguments passed to the container will be passed to the mabo binary
-ENTRYPOINT ["/mabo/mabo"]
+ENTRYPOINT ["/mabo"]
