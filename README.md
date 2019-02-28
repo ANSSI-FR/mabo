@@ -58,7 +58,7 @@ on a local MRT dump.
 
 ```shell
 $ docker build -t anssi/mabo .
-$ docker run --rm -v latest-bview.gz:/bview.gz anssi/mabo:1.0 prefixes /bview.gz
+$ docker run --rm -v $PWD/latest-bview.gz:/bview.gz anssi/mabo prefixes /bview.gz
 ```
 
 ## Usage
