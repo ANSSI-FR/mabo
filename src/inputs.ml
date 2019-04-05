@@ -90,7 +90,7 @@ module InputBz2 = struct
 
   let retrieve fd len =
     let tmp = Bytes.create len in
-    match Bz2.read fd (Bytes.to_string tmp) 0 len with
+    match Bz2.read fd tmp 0 len with
     | 0 -> "",0
     | n -> (safe_sub (Bytes.to_string tmp) 0 n),n (* return the correct number of bytes *)
 
